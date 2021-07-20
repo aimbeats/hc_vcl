@@ -5,8 +5,8 @@
 -->
 <template>
 	<div class="popup">
-		<el-dialog :visible.sync="popObj.show" :fullscreen="fullscreen" :width="popObj.width"
-			:close-on-click-modal=false>
+		<el-dialog v-if="popObj.show" :visible.sync="popObj.show" :fullscreen="fullscreen"
+			:width="popObj.width" :close-on-click-modal="false">
 			<!-- 加个全屏按钮 -->
 			<span slot="title">
 				<span class="el-dialog__title">{{popObj.title}}</span>
@@ -22,7 +22,7 @@
 					</el-button>
 				</div>
 				<div v-else>
-					<el-button size="small" :disabled="isDisabled" @click="popObj.show = false">取 消
+					<el-button size="small" @click="popObj.show = false">取 消
 					</el-button>
 					<el-button size="small" :disabled="isDisabled" type="primary"
 						@click="popupClick($event,'submit')">确 定
@@ -32,8 +32,8 @@
 		</el-dialog>
 	</div>
 </template>
-
 <script>
+import '../instruct/drag';
 export default {
 	name: 'vclPopup',
 	props: {
@@ -67,6 +67,7 @@ export default {
 .popup >>> .el-dialog {
 	display: flex;
 	flex-flow: column wrap;
+	/* margin: 0; */
 }
 .popup >>> .el-dialog__header {
 	padding: 15px 20px;
@@ -75,11 +76,13 @@ export default {
 .popup >>> .el-dialog__header {
 	padding: 15px 20px;
 	background: #f8f8f8;
+}
+.popup >>> .el-dialog__header:active {
+	cursor: move;
 }
 .popup >>> .el-dialog__headerbtn {
 	font-size: 20px;
 }
-
 .popup >>> .el-dialog__body {
 	flex: 1;
 	border-top: 1px solid #e4e4e4;

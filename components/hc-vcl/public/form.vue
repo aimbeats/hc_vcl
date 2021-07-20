@@ -3,12 +3,14 @@
  * @Project: 
  * @Description: formObj配置项
  * formObj:{
-        id:'',//必填项，string,
-        col: 1,//必填项
+        id:'',//必填项，用于定位是哪个form,
+        col: 1,//必填项，表单占几列
+        rules：{},//form规则
+        labelPosition:right
     }
 -->
 <template>
-	<div :ref="formObj.id" :style="{ padding:showMore ? '20px 10px 0 0' : '20px 10px 20px 0'}">
+	<div :ref="formObj.id" :style="{ padding:formPadding}">
 		<el-form :ref="'form'+formObj.id" :model="formItem" :rules="formObj.rules || null"
 			:label-position="formObj.labelPosition?formObj.labelPosition:'right'"
 			:inline="Boolean(formObj.col)"
@@ -16,15 +18,18 @@
 			:label-suffix="formObj.labelSuffix || ''" :size="formObj.size || 'small '"
 			style="display:inline">
 			<el-form-item v-for="(item,index) in formObj.itemArr" :key="index" :label="item.label"
-				:prop="item.prop" v-show="!item.needHidden || !showMore" :style="{
+				:prop="item.key" v-show="!item.isHidden || !showMore" :style="{
                     width:(item.col ? 100/(formObj.col || 1) * item.col :100/(formObj.col || 1)) +'%',
                 }">
-				<form-item :formItem="formItem" :item="item"></form-item>
+				<form-item :formObj="formObj" :formItem="formItem" :item="item" @formChange="formChange"
+					@formBlur="formBlur" />
 			</el-form-item>
-			<div class="queryMod" v-if="formObj.showQuery">
-				<el-button type="primary" :size="formObj.size || 'small'">查询</el-button>
+			<div class="queryMod" v-if="formObj.showQuery"
+				:style="{width:(100/(formObj.col || 1) - 1) +'%'}">
+				<el-button type="primary" :size="formObj.size || 'small'" @click="formQuery($event)">查询
+				</el-button>
 				<el-button :size="formObj.size || 'small'" @click="resetFn">重置</el-button>
-				<a @click="showMore = !showMore" class="more_a">{{ showMore ? '展开' : '收起'}}
+				<a @click="showMore = !showMore" v-show="isMore" class="more_a">{{ showMore ? '展开' : '收起'}}
 					<i :class="showMore ? 'el-icon-arrow-down':'el-icon-arrow-up'"></i>
 				</a>
 			</div>
@@ -80,10 +85,24 @@ export default {
 			deep: true
 		}
 	},
-	computed: {},
+	computed: {
+		formPadding () {
+			let value = 0;
+			this.formObj.itemArr.forEach(item => {
+				value += (item.isHidden && this.showMore ? 0 : item.col || 1)
+			});
+			console.log('value', value, this.formObj.col, this.formObj.col - value % this.formObj.col);
+			return value % this.formObj.col !== 0 ? '20px 10px 0 0' : '20px 10px 20px 0'
+		},
+		isMore () {
+			return this.formObj.itemArr.some(item => {
+				return Boolean(item.isHidden)
+			})
+		}
+	},
 	methods: {
 		formBtnClick (event, item) {
-			this.$emit('formBtnClick', event, item.key)
+			this.$emit('formBtnClick', item.key, event)
 		},
 		/** 输入框的宽度计算 */
 		setFormContent () {
@@ -107,9 +126,27 @@ export default {
 				}
 			})
 		},
+		verify () {
+			let isPass = false;
+			this.$refs['form' + this.formObj.id].validate((valid) => {
+				isPass = valid
+			})
+			return isPass
+		},
 		/** 重置 */
 		resetFn () {
 			this.$refs['form' + this.formObj.id].resetFields();
+		},
+		formQuery (event) {
+			this.$emit('formQuery', event)
+		},
+		//表单项修改
+		formChange (event, item) {
+			this.$emit('formChange', event, item, item.key)
+		},
+		//表单项焦点
+		formBlur (event, item) {
+			this.$emit('formBlur', event, item, item.key)
 		}
 	}
 }
@@ -130,5 +167,6 @@ export default {
 }
 .btn_group {
 	float: right;
+	/* padding-right: 10px; */
 }
 </style>

@@ -5,9 +5,13 @@
 -->
 <template>
 	<div class="hcl_table clearfix">
-		<vcl-form ref="uiForm" :formObj="tableObj.dataForm" @formBtnClick="formBtnClick" />
-		<el-table :data="tableObj.tableData" :header-cell-style="headClass" height="600" size="small"
-			border>
+		<vcl-form ref="uiForm" :formObj="tableObj.dataForm" @formBtnClick="formBtnClick"
+			@formChange="formChange" @formQuery="formQuery" @formBlur="formBlur"
+			v-show="!tableObj.formHidden" />
+		<el-table :data="tableObj.tableData" :header-cell-style="headClass" height="600"
+			:size="tableObj.size || 'small'" border :show-summary="tableObj.showSummary"
+			v-loading="tableObj.loading" @row-click="rowClickFn" @row-dblclick="rowDblclickFn"
+			@select="selectFn">
 			<template v-for="(item,index) in tableObj.tableColumn">
 				<!--复选框-->
 				<el-table-column v-if="item.type=='selection'" :key="index" type="selection"
@@ -19,17 +23,20 @@
 				</el-table-column>
 				<slot v-else-if="item.slot" :name="item.slot" :tit='index'></slot>
 				<el-table-column v-else-if="item.type=='render'" :key="index" :label="item.label"
-					:prop="item.key">
+					:width="item.width" :minWidth="item.minWidth" :prop="item.key" :align="item.align">
 					<template slot-scope="scope">
 						<ex-slot :render="item.render" :row="scope.row" :index="scope.$index" :column="item" />
 					</template>
 				</el-table-column>
-				<el-table-column v-else :key="index" :label="item.label" :prop="item.key" />
+				<el-table-column v-else :key="index" :label="item.label" :prop="item.key"
+					:width="item.width" :minWidth="item.minWidth" :align="item.align" />
 			</template>
 		</el-table>
-		<el-pagination style="padding:10px " :page-size="tableObj.pageSize"
-			:page-sizes="[10, 20, 30, 40]" :current-page="tableObj.pageIndex" :total="tableObj.total"
-			class="page" background layout="total, sizes, prev, pager, next" />
+		<el-pagination style="padding:10px " v-show="!tableObj.pageHidden"
+			:page-size="tableObj.pageSize" :page-sizes="tableObj.pageSizes || [10, 20, 30, 40]"
+			:current-page="tableObj.pageIndex" :total="tableObj.total" class="page" background
+			layout="total, sizes, prev, pager, next" @current-change="handleCurrentChange"
+			@size-change="handleSizeChange" />
 		<!-- <button @click="btn">测试</button> -->
 	</div>
 </template>
@@ -74,6 +81,32 @@ export default {
 		formBtnClick (event, key) {
 			console.log('value,item', key);
 			this.$emit('formBtnClick', key, event)
+		},
+		rowClickFn (row, column, event) {
+			this.$emit('rowClickFn', row, column, event)
+		},
+		rowDblclickFn (row, column, event) {
+			this.$emit('rowDblclickFn', row, column, event)
+		},
+		selectFn (selection, row) {
+			this.$emit('selectFn', selection, row)
+		},
+		formQuery (e) {
+			this.$emit('formQuery', e)
+		},
+		//表单项修改
+		formChange (event, item) {
+			this.$emit('formChange', item.key, item, event)
+		},
+		//表单项焦点
+		formBlur (event, item) {
+			this.$emit('formBlur', item.key, item, event)
+		},
+		handleCurrentChange (e) {
+			this.$emit('handleCurrentChange', e)
+		},
+		handleSizeChange (e) {
+			this.$emit('handleSizeChange', e)
 		}
 	}
 }
