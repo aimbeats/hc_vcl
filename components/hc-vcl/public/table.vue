@@ -78,7 +78,7 @@ export default {
 			// return 'background:#eef1f6;'
 			// return ''
 		},
-		formBtnClick (event, key) {
+		formBtnClick (key, event) {
 			console.log('value,item', key);
 			this.$emit('formBtnClick', key, event)
 		},
